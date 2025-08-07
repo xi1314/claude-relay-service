@@ -421,6 +421,14 @@
                       <span class="hidden xl:inline ml-1">续期</span>
                     </button>
                     <button 
+                      :class="[key.isActive ? 'text-orange-600 hover:text-orange-900 hover:bg-orange-50' : 'text-green-600 hover:text-green-900 hover:bg-green-50', 'font-medium px-2 py-1 rounded transition-colors text-xs']" 
+                      :title="key.isActive ? '禁用' : '激活'"
+                      @click="toggleApiKeyStatus(key)"
+                    >
+                      <i :class="['fas', key.isActive ? 'fa-ban' : 'fa-check-circle']" />
+                      <span class="hidden xl:inline ml-1">{{ key.isActive ? '禁用' : '激活' }}</span>
+                    </button>
+                    <button 
                       class="text-red-600 hover:text-red-900 font-medium hover:bg-red-50 px-2 py-1 rounded transition-colors text-xs" 
                       title="删除"
                       @click="deleteApiKey(key.id)"
@@ -851,6 +859,13 @@
             >
               <i class="fas fa-clock mr-1" />
               续期
+            </button>
+            <button 
+              :class="[key.isActive ? 'text-orange-600 bg-orange-50 hover:bg-orange-100' : 'text-green-600 bg-green-50 hover:bg-green-100', 'px-3 py-2 text-xs rounded-lg transition-colors']"
+              @click="toggleApiKeyStatus(key)"
+            >
+              <i :class="['fas', key.isActive ? 'fa-ban' : 'fa-check-circle', 'mr-1']" />
+              {{ key.isActive ? '禁用' : '激活' }}
             </button>
             <button 
               class="px-3 py-2 text-xs text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
@@ -1509,6 +1524,47 @@ const handleRenewSuccess = () => {
   showRenewApiKeyModal.value = false
   showToast('API Key 续期成功', 'success')
   loadApiKeys()
+}
+
+// 切换API Key状态（激活/禁用）
+const toggleApiKeyStatus = async (key) => {
+  let confirmed = true
+  
+  // 禁用时需要二次确认
+  if (key.isActive) {
+    if (window.showConfirm) {
+      confirmed = await window.showConfirm(
+        '禁用 API Key',
+        `确定要禁用 API Key “${key.name}” 吗？禁用后所有使用此 Key 的请求将返回 401 错误。`,
+        '确定禁用',
+        '取消'
+      )
+    } else {
+      // 降级方案
+      confirmed = confirm(`确定要禁用 API Key “${key.name}” 吗？禁用后所有使用此 Key 的请求将返回 401 错误。`)
+    }
+  }
+  
+  if (!confirmed) return
+  
+  try {
+    const data = await apiClient.put(`/admin/api-keys/${key.id}`, {
+      isActive: !key.isActive
+    })
+    
+    if (data.success) {
+      showToast(`API Key 已${key.isActive ? '禁用' : '激活'}`, 'success')
+      // 更新本地数据
+      const localKey = apiKeys.value.find(k => k.id === key.id)
+      if (localKey) {
+        localKey.isActive = !key.isActive
+      }
+    } else {
+      showToast(data.message || '操作失败', 'error')
+    }
+  } catch (error) {
+    showToast('操作失败', 'error')
+  }
 }
 
 // 删除API Key
