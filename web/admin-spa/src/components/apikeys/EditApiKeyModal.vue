@@ -241,6 +241,27 @@
             </p>
           </div>
         
+          <!-- 激活账号 -->
+          <div>
+            <div class="flex items-center mb-3">
+              <input 
+                id="editIsActive" 
+                v-model="form.isActive" 
+                type="checkbox"
+                class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+              >
+              <label
+                for="editIsActive"
+                class="ml-2 text-sm font-semibold text-gray-700 cursor-pointer"
+              >
+                激活账号
+              </label>
+            </div>
+            <p class="text-xs text-gray-500 mb-4">
+              取消勾选将禁用此 API Key，暂停所有请求，客户端返回 401 错误
+            </p>
+          </div>
+
           <div>
             <label class="block text-sm font-semibold text-gray-700 mb-3">服务权限</label>
             <div class="flex gap-4">
@@ -550,7 +571,8 @@ const form = reactive({
   modelInput: '',
   enableClientRestriction: false,
   allowedClients: [],
-  tags: []
+  tags: [],
+  isActive: true
 })
 
 
@@ -657,6 +679,9 @@ const updateApiKey = async () => {
     // 客户端限制 - 始终提交这些字段
     data.enableClientRestriction = form.enableClientRestriction
     data.allowedClients = form.allowedClients
+    
+    // 活跃状态
+    data.isActive = form.isActive
     
     const result = await apiClient.put(`/admin/api-keys/${props.apiKey.id}`, data)
     
@@ -767,6 +792,8 @@ onMounted(async () => {
   // 从后端数据中获取实际的启用状态，而不是根据数组长度推断
   form.enableModelRestriction = props.apiKey.enableModelRestriction || false
   form.enableClientRestriction = props.apiKey.enableClientRestriction || false
+  // 初始化活跃状态，默认为 true
+  form.isActive = props.apiKey.isActive !== undefined ? props.apiKey.isActive : true
 })
 </script>
 
