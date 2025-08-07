@@ -12,10 +12,10 @@
         </div>
         <div class="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
           <!-- Token统计时间范围选择 -->
-          <div class="flex flex-wrap gap-2 items-center">
+          <div class="flex flex-col sm:flex-row sm:flex-wrap gap-2 sm:gap-3 sm:items-center">
             <select 
               v-model="apiKeyStatsTimeRange" 
-              class="px-3 py-2 text-sm text-gray-700 bg-white border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-gray-300 transition-colors"
+              class="px-3 py-2 text-sm text-gray-700 bg-white border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-gray-300 transition-colors w-full sm:w-auto"
               @change="loadApiKeys()"
             >
               <option value="today">
@@ -34,7 +34,7 @@
             <!-- 标签筛选器 -->
             <select 
               v-model="selectedTagFilter" 
-              class="px-3 py-2 text-sm text-gray-700 bg-white border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-gray-300 transition-colors"
+              class="px-3 py-2 text-sm text-gray-700 bg-white border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-gray-300 transition-colors w-full sm:w-auto"
               @change="currentPage = 1"
             >
               <option value="">
@@ -48,6 +48,15 @@
                 {{ tag }}
               </option>
             </select>
+            <!-- 刷新按钮 -->
+            <button 
+              class="btn btn-secondary px-4 py-2 text-sm flex items-center justify-center gap-2 w-full sm:w-auto"
+              @click="loadApiKeys()"
+              :disabled="apiKeysLoading"
+            >
+              <i :class="['fas', apiKeysLoading ? 'fa-spinner fa-spin' : 'fa-sync-alt']" />
+              刷新
+            </button>
           </div>
           <button 
             class="btn btn-primary px-4 py-2 text-sm flex items-center gap-2 w-full sm:w-auto justify-center"
