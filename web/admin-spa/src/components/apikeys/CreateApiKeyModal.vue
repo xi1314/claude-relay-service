@@ -454,7 +454,7 @@
           </div>
         
           <div>
-            <div class="flex items-center mb-2">
+            <div class="flex items-center mb-3">
               <input 
                 id="enableModelRestriction" 
                 v-model="form.enableModelRestriction" 
@@ -471,20 +471,20 @@
           
             <div
               v-if="form.enableModelRestriction"
-              class="space-y-2 bg-red-50 border border-red-200 rounded-lg p-3"
+              class="space-y-3"
             >
               <div>
-                <label class="block text-xs font-medium text-gray-700 mb-1">限制的模型列表</label>
-                <div class="flex flex-wrap gap-1 mb-2 min-h-[24px]">
+                <label class="block text-sm font-medium text-gray-600 mb-2">限制的模型列表</label>
+                <div class="flex flex-wrap gap-2 mb-3 min-h-[32px] p-2 bg-gray-50 rounded-lg border border-gray-200">
                   <span 
                     v-for="(model, index) in form.restrictedModels" 
                     :key="index"
-                    class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-red-100 text-red-800"
+                    class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-red-100 text-red-800"
                   >
                     {{ model }}
                     <button 
                       type="button"
-                      class="ml-1 text-red-600 hover:text-red-800"
+                      class="ml-2 text-red-600 hover:text-red-800"
                       @click="removeRestrictedModel(index)"
                     >
                       <i class="fas fa-times text-xs" />
@@ -492,29 +492,51 @@
                   </span>
                   <span
                     v-if="form.restrictedModels.length === 0"
-                    class="text-gray-400 text-xs"
+                    class="text-gray-400 text-sm"
                   >
                     暂无限制的模型
                   </span>
                 </div>
-                <div class="flex gap-2">
-                  <input 
-                    v-model="form.modelInput"
-                    type="text"
-                    placeholder="输入模型名称，按回车添加"
-                    class="form-input flex-1 text-sm"
-                    @keydown.enter.prevent="addRestrictedModel"
-                  >
-                  <button 
-                    type="button"
-                    class="px-3 py-1.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm"
-                    @click="addRestrictedModel"
-                  >
-                    <i class="fas fa-plus" />
-                  </button>
+                <div class="space-y-3">
+                  <!-- 快速添加按钮 -->
+                  <div class="flex flex-wrap gap-2">
+                    <button 
+                      v-for="model in availableQuickModels" 
+                      :key="model"
+                      type="button"
+                      class="px-3 py-1 text-xs sm:text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors flex-shrink-0"
+                      @click="quickAddRestrictedModel(model)"
+                    >
+                      {{ model }}
+                    </button>
+                    <span
+                      v-if="availableQuickModels.length === 0"
+                      class="text-gray-400 text-sm italic"
+                    >
+                      所有常用模型已在限制列表中
+                    </span>
+                  </div>
+                  
+                  <!-- 手动输入 -->
+                  <div class="flex gap-2">
+                    <input 
+                      v-model="form.modelInput"
+                      type="text"
+                      placeholder="输入模型名称，按回车添加"
+                      class="form-input flex-1"
+                      @keydown.enter.prevent="addRestrictedModel"
+                    >
+                    <button 
+                      type="button"
+                      class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                      @click="addRestrictedModel"
+                    >
+                      <i class="fas fa-plus" />
+                    </button>
+                  </div>
                 </div>
-                <p class="text-xs text-gray-500 mt-1">
-                  例如：claude-opus-4-20250514
+                <p class="text-xs text-gray-500 mt-2">
+                  设置此API Key无法访问的模型，例如：claude-opus-4-20250514
                 </p>
               </div>
             </div>
@@ -812,6 +834,24 @@ const addRestrictedModel = () => {
 // 移除限制的模型
 const removeRestrictedModel = (index) => {
   form.restrictedModels.splice(index, 1)
+}
+
+// 常用模型列表
+const commonModels = ref([
+  'claude-opus-4-20250514',
+  'claude-opus-4-1-20250805'
+])
+
+// 可用的快捷模型（过滤掉已在限制列表中的）
+const availableQuickModels = computed(() => {
+  return commonModels.value.filter(model => !form.restrictedModels.includes(model))
+})
+
+// 快速添加限制的模型
+const quickAddRestrictedModel = (model) => {
+  if (!form.restrictedModels.includes(model)) {
+    form.restrictedModels.push(model)
+  }
 }
 
 // 标签管理方法
