@@ -568,7 +568,7 @@ router.post('/api-keys/batch', authenticateAdmin, async (req, res) => {
 router.put('/api-keys/:keyId', authenticateAdmin, async (req, res) => {
   try {
     const { keyId } = req.params;
-    const { tokenLimit, concurrencyLimit, rateLimitWindow, rateLimitRequests, claudeAccountId, claudeConsoleAccountId, geminiAccountId, permissions, enableModelRestriction, restrictedModels, enableClientRestriction, allowedClients, expiresAt, dailyCostLimit, tags } = req.body;
+    const { tokenLimit, concurrencyLimit, rateLimitWindow, rateLimitRequests, isActive, claudeAccountId, claudeConsoleAccountId, geminiAccountId, permissions, enableModelRestriction, restrictedModels, enableClientRestriction, allowedClients, expiresAt, dailyCostLimit, tags } = req.body;
 
     // 只允许更新指定字段
     const updates = {};
@@ -659,6 +659,7 @@ router.put('/api-keys/:keyId', authenticateAdmin, async (req, res) => {
       if (expiresAt === null) {
         // null 表示永不过期
         updates.expiresAt = null;
+        updates.isActive = true;
       } else {
         // 验证日期格式
         const expireDate = new Date(expiresAt);
@@ -666,6 +667,7 @@ router.put('/api-keys/:keyId', authenticateAdmin, async (req, res) => {
           return res.status(400).json({ error: 'Invalid expiration date format' });
         }
         updates.expiresAt = expiresAt;
+        updates.isActive = expireDate > new Date(); // 如果过期时间在当前时间之后，则设置为激活状态
       }
     }
 
@@ -687,6 +689,14 @@ router.put('/api-keys/:keyId', authenticateAdmin, async (req, res) => {
         return res.status(400).json({ error: 'All tags must be non-empty strings' });
       }
       updates.tags = tags;
+    }
+
+    // 处理活跃/禁用状态状态, 放在过期处理后，以确保后续增加禁用key功能
+    if (isActive !== undefined) {
+      if (typeof isActive !== 'boolean') {
+        return res.status(400).json({ error: 'isActive must be a boolean' });
+      }
+      updates.isActive = isActive;
     }
 
     await apiKeyService.updateApiKey(keyId, updates);
